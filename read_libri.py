@@ -306,8 +306,8 @@ def main():
         quality=64,  # kilobits per second
         ) as f:
         for i, token in enumerate(tokenize_text(global_phonemizer, text)):
-            print(i, token)
-            wav, s_prev = LFinference(model, model_params, token, s_prev, s_ref, alpha=0.5, diffusion_steps=10, embedding_scale=1.5)
+            # print(i, token)
+            wav, s_prev = LFinference(model, model_params, token, s_prev, s_ref, alpha=0.7, diffusion_steps=10, embedding_scale=3.5)
             f.write(wav)
 
 if __name__ == "__main__":
