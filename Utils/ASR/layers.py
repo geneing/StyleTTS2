@@ -199,6 +199,7 @@ class Attention(nn.Module):
             attention_hidden_state, processed_memory, attention_weights_cat)
 
         if mask is not None:
+            # print(f"alignment.data.device {alignment.data.device}, mask.device {mask.device}")
             alignment.data.masked_fill_(mask, self.score_mask_value)
 
         attention_weights = F.softmax(alignment, dim=1)

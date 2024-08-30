@@ -25,6 +25,8 @@ _punctuation = ';:,.!?¡¿—…"«»“” '
 _letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 _letters_ipa = "ɑɐɒæɓʙβɔɕçɗɖðʤəɘɚɛɜɝɞɟʄɡɠɢʛɦɧħɥʜɨɪʝɭɬɫɮʟɱɯɰŋɳɲɴøɵɸθœɶʘɹɺɾɻʀʁɽʂʃʈʧʉʊʋⱱʌɣɤʍχʎʏʑʐʒʔʡʕʢǀǁǂǃˈˌːˑʼʴʰʱʲʷˠˤ˞↓↑→↗↘'̩'ᵻ"
 
+# _letters_ipa_gruut = {'ɪ', 'oʊ', '‖', 'eɪ', 'ʒ', 'ɛ', 'ˌɛ', 'd', 's', 'ˌʊ', 'aʊ', 't͡ʃ', 'θ', 'ð', 'ˈɔ', 'ŋ', 'aɪ', 'h', 'ˈaɪ', 'ˌeɪ', 'ˌaʊ', 'f', 'ˌʌ', 't', 'ˌɚ', 'ˌæ', 'j', 'ˈʌ', '|', 'd͡ʒ', 'u', 'ˈɑ', 'ɔ', 'ɡ', 'ə', 'v', 'ˈeɪ', 'ˌu', 'ˈʊ', 'ˌɑ', 'k', 'ˈɚ', 'ˈɛ', 'ˈoʊ', 'i', 'ʃ', 'w', 'ˈu', 'ˌɔɪ', 'ˌi', 'b', 'p', 'm', 'ˌoʊ', 'n', 'ˈi', 'ʌ', 'ˈæ', 'ˌaɪ', 'ɑ', 'æ', 'ʊ', 'ɔɪ', 'l', 'ɚ', 'ˈɔɪ', 'z', 'ˈɪ', 'ɹ', 'ˌɔ', 'ˌɪ', 'ˈaʊ'}
+
 # Export all symbols:
 symbols = [_pad] + list(_punctuation) + list(_letters) + list(_letters_ipa)
 
@@ -37,11 +39,14 @@ class TextCleaner:
         self.word_index_dictionary = dicts
     def __call__(self, text):
         indexes = []
+        text = text.strip()
+        text = text.replace("d͡ʒ", "dʒ").replace("t͡ʃ", "tʃ").replace("|",",").replace("‖",".")
+
         for char in text:
             try:
                 indexes.append(self.word_index_dictionary[char])
             except KeyError:
-                print(text)
+                print(f"Bad: {char} in {text}")
         return indexes
 
 np.random.seed(1)
@@ -79,7 +84,7 @@ class FilePathDataset(torch.utils.data.Dataset):
         spect_params = SPECT_PARAMS
         mel_params = MEL_PARAMS
 
-        _data_list = [l.strip().split('|') for l in data_list]
+        _data_list = [l.strip().split('¦') for l in data_list]
         self.data_list = [data if len(data) == 3 else (*data, 0) for data in _data_list]
         self.text_cleaner = TextCleaner()
         self.sr = sr
@@ -95,8 +100,8 @@ class FilePathDataset(torch.utils.data.Dataset):
         self.min_length = min_length
         with open(OOD_data, 'r', encoding='utf-8') as f:
             tl = f.readlines()
-        idx = 1 if '.wav' in tl[0].split('|')[0] else 0
-        self.ptexts = [t.split('|')[idx] for t in tl]
+        idx = 1 if '.wav' in tl[0].split('¦')[0] else 0
+        self.ptexts = [t.split('¦')[idx] for t in tl]
         
         self.root_path = root_path
 
@@ -106,38 +111,44 @@ class FilePathDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):        
         data = self.data_list[idx]
         path = data[0]
-        
-        wave, text_tensor, speaker_id = self._load_tensor(data)
-        
-        mel_tensor = preprocess(wave).squeeze()
-        
-        acoustic_feature = mel_tensor.squeeze()
-        length_feature = acoustic_feature.size(1)
-        acoustic_feature = acoustic_feature[:, :(length_feature - length_feature % 2)]
-        
-        # get reference sample
-        ref_data = (self.df[self.df[2] == str(speaker_id)]).sample(n=1).iloc[0].tolist()
-        ref_mel_tensor, ref_label = self._load_data(ref_data[:3])
-        
-        # get OOD text
-        
-        ps = ""
-        
-        while len(ps) < self.min_length:
-            rand_idx = np.random.randint(0, len(self.ptexts) - 1)
-            ps = self.ptexts[rand_idx]
+        try:
+            wave, text_tensor, speaker_id = self._load_tensor(data)
             
-            text = self.text_cleaner(ps)
-            text.insert(0, 0)
-            text.append(0)
+            mel_tensor = preprocess(wave).squeeze()
+            
+            acoustic_feature = mel_tensor.squeeze()
+            length_feature = acoustic_feature.size(1)
+            acoustic_feature = acoustic_feature[:, :(length_feature - length_feature % 2)]
+            
+            # get reference sample
+            ref_data = (self.df[self.df[2] == str(speaker_id)]).sample(n=1).iloc[0].tolist()
+            ref_mel_tensor, ref_label = self._load_data(ref_data[:3])
+            
+            # get OOD text
+            
+            ps = ""
+            
+            while len(ps) < self.min_length:
+                rand_idx = np.random.randint(0, len(self.ptexts) - 1)
+                ps = self.ptexts[rand_idx]
+                
+                text = self.text_cleaner(ps)
+                text.insert(0, 0)
+                text.append(0)
 
-            ref_text = torch.LongTensor(text)
+                ref_text = torch.LongTensor(text)
+        except Exception as e:
+            print(f"Exception in dataloader: {e}")
+            return None
         
         return speaker_id, acoustic_feature, text_tensor, ref_text, ref_mel_tensor, ref_label, path, wave
 
     def _load_tensor(self, data):
         wave_path, text, speaker_id = data
         speaker_id = int(speaker_id)
+        if not osp.exists(osp.join(self.root_path, wave_path)):
+            raise Exception(f"File not found {wave_path}")
+            
         wave, sr = sf.read(osp.join(self.root_path, wave_path))
         if wave.shape[-1] == 2:
             wave = wave[:, 0].squeeze()
@@ -184,6 +195,11 @@ class Collater(object):
     def __call__(self, batch):
         # batch[0] = wave, mel, text, f0, speakerid
         batch_size = len(batch)
+        
+        batch = list(filter (lambda x:x is not None, batch)) # filter out all the Nones
+        if batch_size > len(batch): # if there are samples missing just use existing members, doesn't work if you reject every sample in a batch
+            diff = batch_size - len(batch)
+            batch = batch + batch[:diff] # assume diff < len(batch)
 
         # sort by mel length
         lengths = [b[1].shape[1] for b in batch]

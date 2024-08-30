@@ -296,7 +296,7 @@ def main():
         text = text.replace('\n', ' ').replace('\r', ' ')
 
 
-    s_ref = compute_style("Demo/reference_audio/1789_142896_000022_000005.wav", model)
+    s_ref = compute_style("Demo/reference_audio/H0.wav", model)
 
     with AudioFile(
         f"output/libri_book.mp3",

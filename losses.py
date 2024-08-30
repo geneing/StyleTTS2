@@ -119,13 +119,13 @@ def discriminator_loss(disc_real_outputs, disc_generated_outputs):
 
 def generator_loss(disc_outputs):
     loss = 0
-    gen_losses = []
+    # gen_losses = []
     for dg in disc_outputs:
         l = torch.mean((1-dg)**2)
-        gen_losses.append(l)
+        # gen_losses.append(l)
         loss += l
 
-    return loss, gen_losses
+    return loss #, gen_losses
 
 """ https://dl.acm.org/doi/abs/10.1145/3573834.3574506 """
 def discriminator_TPRLS_loss(disc_real_outputs, disc_generated_outputs):
@@ -158,8 +158,8 @@ class GeneratorLoss(torch.nn.Module):
         y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_hat)
         loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
         loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
-        loss_gen_f, losses_gen_f = generator_loss(y_df_hat_g)
-        loss_gen_s, losses_gen_s = generator_loss(y_ds_hat_g)
+        loss_gen_f = generator_loss(y_df_hat_g) 
+        loss_gen_s = generator_loss(y_ds_hat_g)
 
         loss_rel = generator_TPRLS_loss(y_df_hat_r, y_df_hat_g) + generator_TPRLS_loss(y_ds_hat_r, y_ds_hat_g)
         

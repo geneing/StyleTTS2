@@ -117,8 +117,8 @@ class ASRS2S(nn.Module):
 
     def forward(self, memory, memory_mask, text_input):
         """
-        moemory.shape = (B, L, H) = (Batchsize, Maxtimestep, Hiddendim)
-        moemory_mask.shape = (B, L, )
+        memory.shape = (B, L, H) = (Batchsize, Maxtimestep, Hiddendim)
+        memory_mask.shape = (B, L, )
         texts_input.shape = (B, T)
         """
         self.initialize_decoder_states(memory, memory_mask)
