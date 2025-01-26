@@ -5,6 +5,7 @@ import re
 import sys
 import yaml
 import shutil
+import traceback
 import numpy as np
 import torch
 import click
@@ -21,6 +22,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import torchaudio
+import torch.autograd.profiler as profiler
+
 import librosa
 
 from models import *
@@ -43,6 +46,13 @@ logger = get_logger(__name__, log_level="DEBUG")
 # The flag below controls whether to allow TF32 on matmul.
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
+
+def tuple_range(start, length, step):
+    t = tuple(range(start, length, step))
+    if len(t)>1 and length-t[-1] < 8*1024:    #make sure that the last segment is not too small
+        t=(t[:-1] + (length,))
+    return t
+
 
 
 class MEM_PROBE(object):
@@ -85,6 +95,8 @@ def main(config_path):
     logger.logger.addHandler(file_handler)
     
     batch_size = config.get('batch_size', 10)
+    chunk_size = config.get('chunk_size', 20480)
+
     device = accelerator.device
     
     epochs = config.get('epochs_1st', 200)
@@ -232,7 +244,7 @@ def main(config_path):
             activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA],
             schedule=torch.profiler.schedule(wait=0, warmup=1, active=3, repeat=1),
             on_trace_ready=torch.profiler.tensorboard_trace_handler(log_dir + "/tensorboard"),
-            record_shapes=True, profile_memory=True,
+            record_shapes=True, profile_memory=True, with_modules=True,
             with_stack=True)
         prof.start()
         for epoch in range(start_epoch, epochs):
@@ -333,11 +345,15 @@ def main(config_path):
                 if epoch >= TMA_epoch:
 
                     optimizer.zero_grad()
-                    d_loss = dl(wav.detach().unsqueeze(1).float(), y_rec.detach()).mean()
+
+                    w = wav.detach().unsqueeze(1).float()
+                    y = y_rec.detach()
+                    idx = tuple_range(chunk_size, w.shape[2], chunk_size)
+                    for w_chunk, y_chunk in zip(torch.tensor_split(w, idx, dim=2), torch.tensor_split(y, idx, dim=2)):
+                        d_loss = dl(w_chunk.detach(), y_chunk.detach())
+                        accelerator.backward(d_loss)
                     memory_probe()
 
-                    accelerator.backward(d_loss)
-                    memory_probe()
                     optimizer.step('msd')
                     memory_probe()
                     optimizer.step('mpd')
@@ -359,9 +375,17 @@ def main(config_path):
 
                     loss_mono = F.l1_loss(s2s_attn, s2s_attn_mono) * 10
                     memory_probe()
-                    loss_gen_all = gl(wav.detach().unsqueeze(1).float(), y_rec).mean()
+                    
+                    w = wav.detach().unsqueeze(1).float()
+                    idx = tuple_range(chunk_size, w.shape[2], chunk_size)
+                    for w_chunk, y_chunk in zip(torch.tensor_split(w, idx, dim=2), torch.tensor_split(y_rec, idx, dim=2)):
+                        loss_gen_all = gl(w_chunk.detach(), y_chunk)
+                        accelerator.backward(loss_gen_all, retain_graph=True)  #TODO: check if this is correct
                     memory_probe()
-                    loss_slm = wl(wav.detach(), y_rec).mean()
+                    
+                    for w_chunk, y_chunk in zip(torch.tensor_split(wav.detach(), idx, dim=1), torch.tensor_split(y_rec, idx, dim=2)):
+                        loss_slm = wl(w_chunk.detach(), y_chunk)
+                        accelerator.backward(loss_slm, retain_graph=True)  #TODO: check if this is correct
                     memory_probe()
 
                     g_loss = loss_params.lambda_mel * loss_mel + \
@@ -531,6 +555,10 @@ def main(config_path):
             torch.save(state, save_path)
     except Exception as e:
         prof.stop()
+        # prof.export_chrome_trace(osp.join(log_dir, 'memory_trace_%05d.json' % epoch))
+        prof.export_stacks(osp.join(log_dir, 'memory_stacks_%05d.pickle' % epoch))
+        prof.export_memory_timeline(osp.join(log_dir, 'memory_timeline_%05d.pickle' % epoch))
+        traceback.print_exc()
         print(f"Exception: {e}")
         torch.cuda.memory._dump_snapshot(osp.join(log_dir, 'memory_exception_%05d.pickle' % epoch))
         exit(0)
