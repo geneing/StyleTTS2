@@ -1,0 +1,40 @@
+LibriTTSR/train-clean-460/8506/293168/8506_293168_000029_000002.wav¦ˈɪt wəz wˈɛn ðə lˈæd wəz plˈeɪɪŋ ˈɔn hˈɪz hˈɑɹp ‖ bˈʌt sˈɔl fˈeɪld tə dˈu wˈʌt hˈɪz wˈɪkɪd hˈɑɹt dɪzˈaɪɚd ‖¦8506
+LibriTTSR/train-clean-460/8118/114476/8118_114476_000036_000002.wav¦hˈɪɹ wəz ə fˈʊl hˈæf dˈeɪ fɚ ðə ˈɑɹmi əv ðə pətˈoʊmək | ɪnˈʌf ˈɪn wˈɪtʃ tə dɪstɹˈɔɪ ə dɪvˈaɪdɪd pˈɔɹʃən əv ðə ˈɑɹmi əv nˈɔɹðɚn vɚdʒˈɪnjə ‖¦8118
+LibriTTSR/train-clean-460/1553/140048/1553_140048_000002_000003.wav¦hˈaʊswˌaɪvz lˈʊkt ˈæt ˈɛmə dʒˈeɪn ˈænd dɪzˈaɪɚd nˈoʊ sˈoʊp | lˈɪsənd tə hˈɚ dɪskɹˈɪpʃən əv ˈɪts mˈɛɹɪts | ˈænd stˈɪl dɪzˈaɪɚd nˈʌn ‖¦1553
+LibriTTSR/train-clean-460/6544/71420/6544_71420_000074_000001.wav¦bɪsˈaɪdz | jˈʊɹ fˈoʊks ˈænd maɪsˈɛlf wɚ ˈɔn ɡˈʊd tˈɚmz ‖¦6544
+LibriTTSR/train-clean-460/6426/64292/6426_64292_000006_000002.wav¦ˈʌndɚ sˈʌtʃ ən ˈɪnfluəns ˈɔl ðˈæt wəz dʒˈɛntəlɪst ˈænd swˈitɪst ˈɪn hˈɪz nˈeɪtʃɚ mˈaɪt wˈɛl dɪvˈɛləp wˈɪθ ɹəpˈɪdɪti | ˈænd ˈɛvɹi ˌæksədˈɛntəl ɹˈʌfnəs ˈænd ˈɪn hˈɪm ðˈɛɹ wəz nˈoʊ ˈʌðɚ bˈaɪ swˈɪft dɪɡɹˈiz vˈænɪʃ fɹˈʌm bˈoʊθ spˈitʃ ˈænd mˈænɚz ‖¦6426
+LibriTTSR/train-clean-460/6575/67584/6575_67584_000018_000000.wav¦ə lˈɔŋ tˈaɪm | ˈaɪ ɹɪpˈitɪd wˈɪθ sˈʌmθɪŋ əv ə nˈoʊt əv sˈædnəs ‖¦6575
+LibriTTSR/train-clean-460/6019/3185/6019_3185_000029_000010.wav¦ðə dˈɪstəns wəz nˈɑt ɡɹˈeɪt | ˈænd wɪðˈɪn fˈaɪv mˈɪnɪts sˈɛvɚəl pˈɚsənz ɹɪtˈɚnd hˈeɪstəli | ˈænd kɹˈaɪd ˈaʊt tə ðə kɹˈaʊd əv lˈeɪdiz ðˈæt ˈɔl wəz tɹˈu wˈɪtʃ ðə jˈʌŋ ɡˈɚl hˈæd sˈɛd ‖¦6019
+LibriTTSR/train-clean-460/5867/48852/5867_48852_000036_000000.wav¦hˈi hˈæz dʒˈʌst bˈɪn tˈɔkɪŋ tə mˈi | tˈu | sˈɛd dʒˈɑn | ˈæz ˈaɪ kˈeɪm θɹˈu ðə skwˈaɪɚz ɡˈɑɹdən ‖¦5867
+LibriTTSR/train-clean-460/5022/29405/5022_29405_000025_000003.wav¦hˈɪz flˈɛʃlˈɛs fˈeɪs wˈʊd hˈæv lˈʊkt lˈaɪk ðə fˈeɪs əv ə mˈʌmi | bˈʌt fɚ ðə ɹˈɛstləs bɹˈaɪtnəs əv hˈɪz lˈɪtəl wˈɔtʃfəl blˈæk ˈaɪz ‖¦5022
+LibriTTSR/train-clean-460/288/131220/288_131220_000034_000002.wav¦ˈaɪ wˈɪl tˈɚn ˈɪt ˈoʊvɚ ˈɪn mˈaɪ mˈaɪnd ‖¦288
+LibriTTSR/train-clean-460/6918/61317/6918_61317_000027_000007.wav¦ðˈɛɹ ˈɑɹ stˈɪl spˈɪtɪŋ stˈoʊnz ˈɪn ðə nˈɔɹθ əv skˈɑtlənd ‖¦6918
+LibriTTSR/train-clean-460/7460/104483/7460_104483_000015_000000.wav¦ˈaɪ fˈɪɹ | nˌɛvɚðəlˈɛs | ðˈæt hˈi ˈɪz dˈaɪɪŋ | ðˈoʊ ˈɪt mˈeɪ | pɚhˈæps | tˈeɪk ə lˈɔŋ tˈaɪm ‖¦7460
+LibriTTSR/train-clean-460/1040/133433/1040_133433_000052_000001.wav¦wˈɛndi wˈʊd hˈæv pɹɪfˈɚd ə mˈɔɹ pˈɚmənənt ɚˈeɪndʒmənt | ˈænd ˈɪt sˈimd tə hˈɚ ðˈæt spɹˈɪŋ wˈʊd bˈi lˈɔŋ ˈɪn kˈʌmɪŋ | bˈʌt ðˈɪs pɹˈɑməs sˈɛnt pˈitɚ əwˈeɪ kwˈaɪt ɡˈeɪ əɡˈɛn ‖¦1040
+LibriTTSR/train-clean-460/6139/58869/6139_58869_000041_000001.wav¦hˈɚ bɹˈɛθ kˈeɪm ʃˈɔɹt ˈænd hˈɚ hˈɑɹt bˈit fˈæst ‖¦6139
+LibriTTSR/train-clean-460/534/127537/534_127537_000033_000000.wav¦ðˈɛɹ ˈeɪnt ə θˈɪŋ lˈɛft hˈɪɹ | sˈɛd mˈɛɹi | stˈɪl fˈilɪŋ ɹˈaʊnd əmˈʌŋ ðə bˈoʊnz | nˈɑt ə kˈɑpɚ dˈɔɪt nˈɔɹ ə bˈæki bˈɑks ‖¦534
+LibriTTSR/train-clean-460/7313/91072/7313_91072_000030_000003.wav¦nˈoʊ kɹˈɪtɪsˌɪzəm wəz tˈu skˈeɪðɪŋ | bˈʌt mˈɪstɚ ɡɹˈili tˈʊk ðə dɪnˌʌnsiˈeɪʃənz lˈaɪk ə hˈɪɹoʊ | bɪkˈʌz hˈi hˈæd dˈʌn wˈʌt hˈɪz kˈɑnʃəns əpɹˈuvd ‖¦7313
+LibriTTSR/train-clean-460/831/130746/831_130746_000059_000001.wav¦bˈʌt hˈi hˈæd nˈoʊ ˈædəkwɪt ˈænsɚ ‖¦831
+LibriTTSR/train-clean-460/459/127522/459_127522_000020_000002.wav¦bˈʌt ˈɪn hˈɛvənz nˈeɪm | tˈɛl mˈi | wˈʌt wəz ðˈæt ‖¦459
+LibriTTSR/train-clean-460/5604/26982/5604_26982_000008_000003.wav¦bˈʌt hˈɪz kwˈɪk mˈaɪnd hˈæd sˈun tɹˈeɪst ˈaʊt ðə kˈɔɹs ðˈæt wˈʊd sɪkjˈʊɹ hˈɪz ˈoʊn sˈeɪfti wˈɪθ ðə fjˈuɪst ʌnplˈɛzənt kˈɑŋkəmɪtənts ‖¦5604
+LibriTTSR/train-clean-460/911/128684/911_128684_000011_000003.wav¦ˈɪn ðə tˈu kˈeɪsɪz ðˈɛɹ kˈɑntˌɛksts ˈɑɹ ˈæpt tə bˈi dˈɪfɹənt ‖¦911
+LibriTTSR/train-clean-460/6078/54007/6078_54007_000000_000002.wav¦bˈaɪ ˈænd bˈaɪ hˈi kˈeɪm tə ə kɹˈɔs ɹˈoʊd | ˈænd hˈu ʃˈʊd hˈi sˈi sˈɪtɪŋ ðˈɛɹ bˈʌt ˈɪl lˈʌk hɪmsˈɛlf ‖¦6078
+LibriTTSR/train-clean-460/4535/279849/4535_279849_000028_000001.wav¦tˈɑm pˈʊt ðə lˈæst əv ðə fjˈul ˈɪn ðə fˈaɪɚ | ˈænd lˈind wˈɛɹəli əɡˈɛnst ðə kˈæb ‖¦4535
+LibriTTSR/train-clean-460/114/129324/114_129324_000044_000000.wav¦wˈɛn ðə ɹˈum dˈɔɹ klˈoʊzd bɪhˈaɪnd hˈɪm | mˈɪstɚ ɡɹˈɪmwɪɡ lˈɪftɪd ˈʌp hˈɪz hˈɛd | ˈænd kənvˈɚtɪŋ wˈʌn əv ðə hˈaɪnd lˈɛɡz əv hˈɪz tʃˈɛɹ ˈɪntu ə pˈɪvət | dɪskɹˈaɪbd θɹˈi dɪstˈɪŋkt sˈɚkəlz wˈɪθ ðə əsˈɪstəns əv hˈɪz stˈɪk ˈænd ðə tˈeɪbəl | sˈɪtɪŋ ˈɪn ˈɪt ˈɔl ðə tˈaɪm ‖¦114
+LibriTTSR/train-clean-460/806/123715/806_123715_000004_000024.wav¦mˈeɪ bˈi ˈɪt ˈɪz mˈɛni kˈʌlɚd | tˈu | ˈɪf wˈʌn tˈeɪks ðə dɹˈɛs jˈunəfˌɔɹmz | mˈɪlɪtˌɛɹi ˈænd səvˈɪljən | əv ˈɔl pˈipəlz ˈɪn ˈɔl ˈeɪdʒɪz ðˈæt əlˈoʊn ˈɪz wˈɚθ sˈʌmθɪŋ | ˈænd ˈɪf jˈu tˈeɪk ðə ʌndɹˈɛs jˈunəfˌɔɹmz jˈu wˈɪl nˈɛvɚ ɡˈɛt tə ðə ˈɛnd əv ˈɪt | nˈoʊ hɪstˈɔɹiən wˈʊd bˈi ˈikwəl tə ðə dʒˈɑb ‖¦806
+LibriTTSR/train-clean-460/2638/10172/2638_10172_000011_000005.wav¦mˈɑɹk ˈɔn ðə ˈʌndɚ klˈoʊðɪŋ mˈæɡdəlɪn vˌænstˈoʊn ‖ ˈɪz səpˈoʊzd tə hˈæv dʒˈɔɪnd | ˈɔɹ ətˈɛmptɪd tə dʒˈɔɪn | ˈʌndɚ ən əsˈumd nˈeɪm | ə θiˈætɹɪkəl kˈʌmpəni nˈaʊ pɚfˈɔɹmɪŋ ˈæt jˈɔɹk ‖¦2638
+LibriTTSR/train-clean-460/783/126739/783_126739_000076_000000.wav¦hˈi hˈæz bˈɪn θɹˈɛtənɪŋ səsˈaɪəti wˈɪθ ˈɔl sˈɔɹts əv hˈɔɹɚz | kəntˈɪnjud ðə lˈeɪdi | hˈuz ɪnˈʌnsiˈeɪʃən wəz kɚˈɛsɪŋ ˈænd slˈoʊ | ˌæpɹəpˈoʊ əv ðˈɪs ɪksplˈoʊʒən ˈɪn ɡɹˈinwˌɪtʃ pˈɑɹk ‖¦783
+LibriTTSR/train-clean-460/87/121553/87_121553_000178_000000.wav¦bˈʌt əmˈʌŋ mˈɔɹtəlz wˈɪl ˈænd ˈɑɹɡjəmənt | fɚ ɹˈizən ðˈæt tə jˈu ˈɪz mˈænɪfˌɛst | dɪvɚsəli fˈɛðɚd ˈɪn ðˈɛɹ pˈɪniənz ˈɑɹ ‖¦87
+LibriTTSR/train-clean-460/3781/156973/3781_156973_000019_000001.wav¦dˈu jˈu æksˈɛpt dʒˈɔɹdʒ ˈɛliəts dˌɛfɪnˈɪʃən əv dʒˈinjəs ˈæz ðə kəpˈæsɪti fɚ ʌnlˈɪmɪtɪd wˈɚk ‖ tə wˈʌt ɪkstˈɛnt dˈʌz ə mˈænz fˈeɪθ ˈɪn ɡˈɑd ˈænd ˈɪn hˈɪz fˈɛloʊ mˈɛn dɪtˈɚmən hˈɪz əbˈɪləti tə wˈɪn səksˈɛs ‖¦3781
+LibriTTSR/train-clean-460/887/123291/887_123291_000026_000000.wav¦ˈaɪ wəz ɡˈʊd ɪnˈʌf nˈɑt tə kˌɑntɹədˈɪkt ðˈɪs stˈɑɹtəlɪŋ əsˈɚʃən ‖¦887
+LibriTTSR/train-clean-460/1222/133834/1222_133834_000029_000002.wav¦ˈɪt wəz fˈaɪv oʊklˈɑk ˈɪn ðə ˌæftɚnˈun əv ðə bɹˈaɪt ɔtˈʌmnəl sˈʌndˌeɪ | bɪfˈɔɹ ə kˈændəl wəz sˈɛnt dˈaʊn tə tɹˈaɪ ðə ˈɛɹ | wˈaɪl θɹˈi ˈɔɹ fˈɔɹ ɹˈʌf fˈeɪsɪz stˈʊd kɹˈaʊdɪd klˈoʊs təɡˈɛðɚ | ətˈɛntɪvli wˈɔtʃɪŋ ˈɪt | ðə mˈæn ˈæt ðə wˈɪndləs lˈoʊɚɪŋ ˈæz ðˈeɪ wɚ tˈoʊld ‖¦1222
+LibriTTSR/train-clean-460/4680/16042/4680_16042_000016_000004.wav¦hˈæd hˈi nˈɑt ɡˈɪvən hˈɚ hˈɪz wˈɚd əv ˈɑnɚ ðˈæt hˈi wˈʊd dˈaɪ ‖¦4680
+LibriTTSR/train-clean-460/6550/65820/6550_65820_000003_000000.wav¦ðə plˈeɪ wəz fˈaʊndɪd ˈɔn ðə stˈɔɹi əv ðə mˈɑk dˈɑktɚ | ˈænd | fɹˈʌm ðə dʒˈɛstʃɚz əv ðə sˈɚvənts | hˈu wɚ ðə bˈɛst ˈæktɚz | ˈaɪ ʃˈʊd ɪmˈædʒən kəntˈeɪnd sˈʌm hjˈumɚ ‖¦6550
+LibriTTSR/train-clean-460/3851/9210/3851_9210_000012_000000.wav¦ʃˈi wəz əbˈaʊt θˈɚti ˈeɪt jˈɪɹz əv ˈeɪdʒ | ˈænd stˈɪl pɹɪzˈɚvd | nˈɑt ðə fɹˈɛʃ | hˈaɪ kˈʌlɚd bjˈuti əv ðə bˈæs nˈɔɹməndɪz | bˈʌt ə fɹˈædʒəl lˈʌvlɪns əv wˈʌt mˈeɪ bˈi kˈɔld ən ɚˌɪstəkɹˈætɪk tˈaɪp ‖¦3851
+LibriTTSR/train-clean-460/2196/170379/2196_170379_000005_000004.wav¦ðə fˈɔɹmɚ mˈɛzmɚ θˈɔt fˈɚðɚ ðˈæt mˈɛtəl bɪkˈeɪm ɪmbjˈud bˈaɪ ðə sˈoʊlɚ kwˈɑlətiz | ˈænd hˈɪz sˈɪstəm ˈɪz ˈɔlsoʊ nˈoʊn ˈæz mˈɛtələdʒi bˈaɪ wˈɪtʃ hˈi mˈɛnt ðə pɹˈɑpɚ ˌæplɪkˈeɪʃən əv mˈɛtəlz ‖¦2196
+LibriTTSR/train-clean-460/3982/178459/3982_178459_000021_000001.wav¦wˈʌt mˈeɪd jˈu sˈeɪ ðˈæt ‖¦3982
+LibriTTSR/train-clean-460/3380/64298/3380_64298_000013_000003.wav¦ðˈæt kˈɑtɪdʒ jˈust tə bˈi ə mˈɪɹ hˈʌvəl | wɪðˈaʊt dˈɔɹ ˈɔɹ wˈɪndoʊ ‖¦3380
+LibriTTSR/train-clean-460/598/127704/598_127704_000012_000002.wav¦ˈæt wˈʌn plˈeɪs nˈɪɹ ðə sˈʌmɪt kˈɛɹfəl klˈaɪmɪŋ ˈɪz nˈɛsɪsˌɛɹi | bˈʌt ˈɪt ˈɪz nˈɑt sˈoʊ dˈeɪndʒɚəs ˈɔɹ dˈɪfɪkʌlt ˈæz tə dɪtˈɚ ˈɛni wˈʌn əv ˈɔɹdɪnˌɛɹi skˈɪl | wˈaɪl ðə vjˈuz ˈɑɹ ɡlˈɔɹiəs ‖¦598
+LibriTTSR/train-clean-460/4222/187005/4222_187005_000028_000002.wav¦ˈɪf hˈi wəz tə bˈi ə mədʒˈɪʃən | kˈʊd hˈi mˈeɪk ðˈɪs bˈɔɪ kˈʌm tə lˈaɪf ‖¦4222
+LibriTTSR/train-clean-460/5163/18515/5163_18515_000004_000001.wav¦ˈɪt mˈeɪd mˈi hˈæpi ˈɪn ðə fˈɚst plˈeɪs bɪkˈʌz jˈu θˈɔt əv mˈi | ˈænd ðˈɛn | dʒˈʌst θˈɪŋk | pˈɛt | ðˈæt pˈʊɹ sˈeɪlɚ | hˈaʊ ɡlˈæd hˈi wˈɪl bˈi tə tˈeɪk ˈɪt hˈoʊm ‖¦5163
+LibriTTSR/train-clean-460/7794/295947/7794_295947_000035_000000.wav¦wˈɛl | ðˈɪs ˈɪz vˈɛɹi stɹˈeɪndʒ ‖¦7794

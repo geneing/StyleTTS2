@@ -30,7 +30,7 @@ def length_to_bin(length):
     return bin
 
 for line in sys.stdin:
-    fields = line.split("|")
+    fields = line.split("¦")
     if fields[0].strip() in already:
         sys.stderr.write("DUPLICATE " + fields[0].strip())
     else:
@@ -47,4 +47,4 @@ for key in sorted(time_bins.keys()):
     filename = outdir / ("list-%d.txt" % key)
     with filename.open("w") as f:
         for item in time_bins[key]:
-            f.write("%s|%s|%s\n" % (item[0], item[1], item[2]))
+            f.write("%s¦%s¦%s\n" % (item[0], item[1], item[2]))

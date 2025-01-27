@@ -54,7 +54,7 @@ class MEM_PROBE(object):
         current_mem = torch.cuda.memory_allocated()
         mem_delta = current_mem - self.last_mem
         self.last_mem = current_mem
-        logger.info(f"MEM:{sys._getframe(1).f_code.co_filename}:{sys._getframe(1).f_lineno} {mem_delta/(1024*1024*1024):.2f} : {current_mem/(1024*1024*1024):.2f} GB")
+        logger.info(f"MEM: {sys._getframe(1).f_code.co_filename}:{sys._getframe(1).f_lineno} {mem_delta/(1024*1024*1024):.2f} : {current_mem/(1024*1024*1024):.2f} GB : {torch.cuda.max_memory_allocated()/(1024*1024*1024):.2f} GB")
         return None
 
 @click.command()
@@ -73,7 +73,7 @@ def main(config_path, probe_batch):
     memory_probe = MEM_PROBE()
 
     ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
-    accelerator = Accelerator(project_dir=log_dir, split_batches=True, kwargs_handlers=[ddp_kwargs])    
+    accelerator = Accelerator(project_dir=log_dir, split_batches=False, kwargs_handlers=[ddp_kwargs])    
     if accelerator.is_main_process:
         writer = SummaryWriter(log_dir + "/tensorboard")
 
@@ -120,8 +120,7 @@ def main(config_path, probe_batch):
                                       num_workers=0,
                                       device=device,
                                       dataset_config={})
-    def log_print_function(s):
-        log_print(s, logger)
+
     batch_manager = BatchManager(train_path,
                                  log_dir,
                                  probe_batch=probe_batch,
@@ -130,7 +129,7 @@ def main(config_path, probe_batch):
                                  min_length=min_length,
                                  device=device,
                                  accelerator=accelerator,
-                                 log_print=log_print_function)
+                                 log_print=lambda s: log_print(s, logger))
 
     memory_probe()
     with accelerator.main_process_first():
@@ -234,7 +233,7 @@ def main(config_path, probe_batch):
     try:
         prof = torch.profiler.profile(
             activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA],
-            schedule=torch.profiler.schedule(wait=0, warmup=1, active=3, repeat=1),
+            schedule=torch.profiler.schedule(wait=0, warmup=0, active=3, repeat=1),
             on_trace_ready=torch.profiler.tensorboard_trace_handler(log_dir + "/tensorboard"),
             record_shapes=True, profile_memory=True,
             with_stack=True)
@@ -279,31 +278,31 @@ def main(config_path, probe_batch):
                 t_en = model.text_encoder(texts, input_lengths, text_mask)
                 memory_probe()
 
-            # 50% of chance of using monotonic version
-            if bool(random.getrandbits(1)):
-                asr = (t_en @ s2s_attn)
-            else:
-                asr = (t_en @ s2s_attn_mono)
+                # 50% of chance of using monotonic version
+                if bool(random.getrandbits(1)):
+                    asr = (t_en @ s2s_attn)
+                else:
+                    asr = (t_en @ s2s_attn_mono)
 
-            # get clips
-            #mel_input_length_all = accelerator.gather(mel_input_length) # for balanced load
-            #mel_len = min([int(mel_input_length_all.min().item() / 2 - 1), max_len // 2])
-            #mel_len_st = int(mel_input_length.min().item() / 2 - 1)
-        
-            en = []
-            gt = []
-            wav = []
-            st = []
+                # get clips
+                #mel_input_length_all = accelerator.gather(mel_input_length) # for balanced load
+                #mel_len = min([int(mel_input_length_all.min().item() / 2 - 1), max_len // 2])
+                #mel_len_st = int(mel_input_length.min().item() / 2 - 1)
             
-            for bib in range(len(mel_input_length)):
-                en.append(asr[bib])
-                gt.append(mels[bib])
+                en = []
+                gt = []
+                wav = []
+                st = []
+            
+                for bib in range(len(mel_input_length)):
+                    en.append(asr[bib])
+                    gt.append(mels[bib])
 
-                y = waves[bib]
-                wav.append(torch.from_numpy(y).to(device))
-                
-                # style reference (better to be different from the GT)
-                st.append(mels[bib])
+                    y = waves[bib]
+                    wav.append(torch.from_numpy(y).to(device))
+                    
+                    # style reference (better to be different from the GT)
+                    st.append(mels[bib])
 
                 en = torch.stack(en)
                 gt = torch.stack(gt).detach()
@@ -311,37 +310,40 @@ def main(config_path, probe_batch):
 
                 wav = torch.stack(wav).float().detach()
 
-            # clip too short to be used by the style encoder
-            if (gt.shape[-1] < 40
-                or (gt.shape[-1] < 80
-                    and not model_params.skip_downsamples)):
-                log_print("Skipping batch. TOO SHORT", logger)
-                return running_loss, iters
+                # clip too short to be used by the style encoder
+                if (gt.shape[-1] < 40
+                    or (gt.shape[-1] < 80
+                        and not model_params.skip_downsamples)):
+                    log_print("Skipping batch. TOO SHORT", logger)
+                    return running_loss, iters
                 
-            with torch.no_grad():    
-                real_norm = log_norm(gt.unsqueeze(1)).squeeze(1).detach()
-                F0_real, _, _ = model.pitch_extractor(gt.unsqueeze(1))
+                with torch.no_grad():    
+                    real_norm = log_norm(gt.unsqueeze(1)).squeeze(1).detach()
+                    F0_real, _, _ = model.pitch_extractor(gt.unsqueeze(1))
 
-            memory_probe()    
-            s = model.style_encoder(st.unsqueeze(1) if multispeaker else gt.unsqueeze(1))
-            memory_probe()
-            y_rec = model.decoder(en, F0_real, real_norm, s)
-            
-            # discriminator loss
-            
-            if epoch >= TMA_epoch:
-                optimizer.zero_grad()
+                memory_probe()    
+                s = model.style_encoder(st.unsqueeze(1) if multispeaker else gt.unsqueeze(1))
                 memory_probe()
-                d_loss = dl(wav.detach().unsqueeze(1).float(), y_rec.detach()).mean()
+                y_rec = model.decoder(en, F0_real, real_norm, s)
                 memory_probe()
-                accelerator.backward(d_loss)
-                memory_probe()
-                optimizer.step('msd')
-                memory_probe()
-                optimizer.step('mpd')
-                memory_probe()
-            else:
-                d_loss = 0
+                
+                # discriminator loss
+                if epoch >= TMA_epoch:
+                    optimizer.zero_grad()
+                    memory_probe()
+                    # torch.cuda.memory._record_memory_history(max_entries=100000)
+                    d_loss = dl(wav.detach().unsqueeze(1).float(), y_rec.detach()).mean()
+                    # torch.cuda.memory._dump_snapshot(f"{log_dir}/memory_snapshot_line_336_{epoch}_{i}.pickle")
+                    # torch.cuda.memory._record_memory_history(enabled=None)
+                    memory_probe()
+                    accelerator.backward(d_loss)
+                    memory_probe()
+                    optimizer.step('msd')
+                    memory_probe()
+                    optimizer.step('mpd')
+                    memory_probe()
+                else:
+                    d_loss = 0
 
                 # generator loss
                 optimizer.zero_grad()

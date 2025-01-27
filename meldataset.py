@@ -88,7 +88,7 @@ class FilePathDataset(torch.utils.data.Dataset):
         spect_params = SPECT_PARAMS
         mel_params = MEL_PARAMS
         self.cache = {}
-        _data_list = [l.strip().split('|') for l in data_list]
+        _data_list = [l.strip().split('¦') for l in data_list]
         self.data_list = [data if len(data) == 3 else (*data, 0) for data in _data_list]
         self.text_cleaner = TextCleaner()
         self.sr = sr
@@ -150,10 +150,7 @@ class FilePathDataset(torch.utils.data.Dataset):
             text.insert(0, 0)
             text.append(0)
 
-                ref_text = torch.LongTensor(text)
-        except Exception as e:
-            print(f"Exception in dataloader: {e}")
-            return None
+            ref_text = torch.LongTensor(text)
         
         return speaker_id, acoustic_feature, text_tensor, ref_text, ref_mel_tensor, ref_label, path, wave
 
