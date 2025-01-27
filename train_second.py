@@ -16,7 +16,7 @@ import warnings
 warnings.simplefilter('ignore')
 from torch.utils.tensorboard import SummaryWriter
 
-from meldataset import build_dataloader
+from meldataset import build_dataloader, BatchManager
 
 from Utils.ASR.models import ASRCNN
 from Utils.JDC.model import JDCNet
@@ -50,7 +50,8 @@ logger.addHandler(handler)
 
 @click.command()
 @click.option('-p', '--config_path', default='Configs/config.yml', type=str)
-def main(config_path):
+@click.option('--probe_batch', default=None, type=int)
+def main(config_path, probe_batch):
     config = yaml.safe_load(open(config_path))
     
     log_dir = config['log_dir']
@@ -63,9 +64,6 @@ def main(config_path):
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s: %(message)s'))
     logger.addHandler(file_handler)
-
-    
-    batch_size = config.get('batch_size', 10)
 
     epochs = config.get('epochs_2nd', 200)
     save_freq = config.get('save_freq', 2)
@@ -80,35 +78,35 @@ def main(config_path):
     min_length = data_params['min_length']
     OOD_data = data_params['OOD_data']
 
-    max_len = config.get('max_len', 200)
-    
     loss_params = Munch(config['loss_params'])
     diff_epoch = loss_params.diff_epoch
     joint_epoch = loss_params.joint_epoch
     
     optimizer_params = Munch(config['optimizer_params'])
     
-    train_list, val_list = get_data_path_list(train_path, val_path)
     device = 'cuda'
 
-    train_dataloader = build_dataloader(train_list,
-                                        root_path,
-                                        OOD_data=OOD_data,
-                                        min_length=min_length,
-                                        batch_size=batch_size,
-                                        num_workers=2,
-                                        dataset_config={},
-                                        device=device)
-
+    val_list = get_data_path_list(val_path)
     val_dataloader = build_dataloader(val_list,
                                       root_path,
                                       OOD_data=OOD_data,
                                       min_length=min_length,
-                                      batch_size=batch_size,
+                                      batch_size={},
                                       validation=True,
                                       num_workers=0,
                                       device=device,
                                       dataset_config={})
+    def log_print_function(s):
+        log_print(s, logger)
+    batch_manager = BatchManager(train_path,
+                                 log_dir,
+                                 probe_batch=probe_batch,
+                                 root_path=root_path,
+                                 OOD_data=OOD_data,
+                                 min_length=min_length,
+                                 device=device,
+                                 accelerator=None,
+                                 log_print=log_print_function)
     
     # load pretrained ASR model
     ASR_config = config.get('ASR_config', False)
@@ -124,6 +122,8 @@ def main(config_path):
     plbert = load_plbert(BERT_path)
     
     # build model
+    if 'skip_downsamples' not in config['model_params']:
+        config['model_params']['skip_downsamples'] = False
     model_params = recursive_munch(config['model_params'])
     multispeaker = model_params.multispeaker
     model = build_model(model_params, text_aligner, pitch_extractor, plbert)
@@ -134,7 +134,7 @@ def main(config_path):
         if key != "mpd" and key != "msd" and key != "wd":
             model[key] = MyDataParallel(model[key])
             
-    start_epoch = 0
+    start_epoch = 1
     iters = 0
 
     load_pretrained = config.get('pretrained_model', '') != '' and config.get('second_stage_load_pretrained', False)
@@ -150,10 +150,10 @@ def main(config_path):
                 ignore_modules=['bert', 'bert_encoder', 'predictor', 'predictor_encoder', 'msd', 'mpd', 'wd', 'diffusion']) # keep starting epoch for tensorboard log
 
             # these epochs should be counted from the start epoch
-            diff_epoch += start_epoch
-            joint_epoch += start_epoch
-            epochs += start_epoch
-            
+            #diff_epoch += start_epoch
+            #joint_epoch += start_epoch
+            #epochs += start_epoch
+            start_epoch = 1
             model.predictor_encoder = copy.deepcopy(model.style_encoder)
         else:
             raise ValueError('You need to specify the path to the first stage model.') 
@@ -180,7 +180,7 @@ def main(config_path):
         "max_lr": optimizer_params.lr,
         "pct_start": float(0),
         "epochs": epochs,
-        "steps_per_epoch": len(train_dataloader),
+        "steps_per_epoch": batch_manager.get_step_count(),
     }
     scheduler_params_dict= {key: scheduler_params.copy() for key in model}
     scheduler_params_dict['bert']['max_lr'] = optimizer_params.bert_lr * 2
@@ -211,6 +211,7 @@ def main(config_path):
     if load_pretrained:
         model, optimizer, start_epoch, iters = load_checkpoint(model,  optimizer, config['pretrained_model'],
                                     load_only_params=config.get('load_only_params', True))
+        start_epoch += 1
         
     n_down = model.text_aligner.n_down
 
@@ -257,7 +258,8 @@ def main(config_path):
         if epoch >= diff_epoch:
             start_ds = True
 
-        for i, batch in enumerate(train_dataloader):
+        #for i, batch in enumerate(train_dataloader):
+        def train_batch(i, batch, running_loss, iters):
             waves = batch[0]
             batch = [b.to(device) for b in batch[1:]]
             texts, input_lengths, ref_texts, ref_lengths, mels, mel_input_length, ref_mels = batch
@@ -272,8 +274,9 @@ def main(config_path):
                     s2s_attn = s2s_attn.transpose(-1, -2)
                     s2s_attn = s2s_attn[..., 1:]
                     s2s_attn = s2s_attn.transpose(-1, -2)
-                except:
-                    continue
+                except Exception as e:
+                    print("s2s_attn fail", e)
+                    return running_loss, iters
 
                 mask_ST = mask_from_lens(s2s_attn, input_lengths, mel_input_length // (2 ** n_down))
                 s2s_attn_mono = maximum_path(s2s_attn, mask_ST)
@@ -302,8 +305,8 @@ def main(config_path):
                 s = model.style_encoder(mel.unsqueeze(0).unsqueeze(1))
                 gs.append(s)
 
-            s_dur = torch.stack(ss).squeeze()  # global prosodic styles
-            gs = torch.stack(gs).squeeze() # global acoustic styles
+            s_dur = torch.stack(ss).squeeze(1)  # global prosodic styles
+            gs = torch.stack(gs).squeeze(1) # global acoustic styles
             s_trg = torch.cat([gs, s_dur], dim=-1).detach() # ground truth for denoiser
 
             bert_dur = model.bert(texts, attention_mask=(~text_mask).int())
@@ -343,8 +346,6 @@ def main(config_path):
                                                     s2s_attn_mono, 
                                                     text_mask)
             
-            mel_len = min(int(mel_input_length.min().item() / 2 - 1), max_len // 2)
-            mel_len_st = int(mel_input_length.min().item() / 2 - 1)
             en = []
             gt = []
             st = []
@@ -352,19 +353,15 @@ def main(config_path):
             wav = []
 
             for bib in range(len(mel_input_length)):
-                mel_length = int(mel_input_length[bib].item() / 2)
-
-                random_start = np.random.randint(0, mel_length - mel_len)
-                en.append(asr[bib, :, random_start:random_start+mel_len])
-                p_en.append(p[bib, :, random_start:random_start+mel_len])
-                gt.append(mels[bib, :, (random_start * 2):((random_start+mel_len) * 2)])
+                en.append(asr[bib])
+                p_en.append(p[bib])
+                gt.append(mels[bib])
                 
-                y = waves[bib][(random_start * 2) * 300:((random_start+mel_len) * 2) * 300]
+                y = waves[bib]
                 wav.append(torch.from_numpy(y).to(device))
 
                 # style reference (better to be different from the GT)
-                random_start = np.random.randint(0, mel_length - mel_len_st)
-                st.append(mels[bib, :, (random_start * 2):((random_start+mel_len_st) * 2)])
+                st.append(mels[bib])
                 
             wav = torch.stack(wav).float().detach()
 
@@ -373,15 +370,18 @@ def main(config_path):
             gt = torch.stack(gt).detach()
             st = torch.stack(st).detach()
             
-            if gt.size(-1) < 80:
-                continue
+            if (gt.shape[-1] < 40
+                or (gt.shape[-1] < 80
+                    and not model_params.skip_downsamples)):
+                log_print("Skipping batch. TOO SHORT", logger)
+                return running_loss, iters
 
             s_dur = model.predictor_encoder(st.unsqueeze(1) if multispeaker else gt.unsqueeze(1))
             s = model.style_encoder(st.unsqueeze(1) if multispeaker else gt.unsqueeze(1))
             
             with torch.no_grad():
                 F0_real, _, F0 = model.pitch_extractor(gt.unsqueeze(1))
-                F0 = F0.reshape(F0.shape[0], F0.shape[1] * 2, F0.shape[2], 1).squeeze()
+                F0 = F0.reshape(F0.shape[0], F0.shape[1] * 2, F0.shape[2], 1).squeeze(1)
 
                 asr_real = model.text_aligner.get_feature(gt)
 
@@ -421,7 +421,7 @@ def main(config_path):
                 loss_gen_all = gl(wav, y_rec).mean()
             else:
                 loss_gen_all = 0
-            loss_lm = wl(wav.detach().squeeze(), y_rec.squeeze()).mean()
+            loss_lm = wl(wav.detach().squeeze(1), y_rec.squeeze(1)).mean()
 
             loss_ce = 0
             loss_dur = 0
@@ -487,7 +487,8 @@ def main(config_path):
                                  ref_lengths, use_ind, s_trg.detach(), ref if multispeaker else None)
 
                 if slm_out is None:
-                    continue
+                    print("slm_out none")
+                    return running_loss, iters
                     
                 d_loss_slm, loss_gen_lm, y_pred = slm_out
                 
@@ -542,7 +543,7 @@ def main(config_path):
             
             if (i+1)%log_interval == 0:
                 logger.info ('Epoch [%d/%d], Step [%d/%d], Loss: %.5f, Disc Loss: %.5f, Dur Loss: %.5f, CE Loss: %.5f, Norm Loss: %.5f, F0 Loss: %.5f, LM Loss: %.5f, Gen Loss: %.5f, Sty Loss: %.5f, Diff Loss: %.5f, DiscLM Loss: %.5f, GenLM Loss: %.5f'
-                    %(epoch+1, epochs, i+1, len(train_list)//batch_size, running_loss / log_interval, d_loss, loss_dur, loss_ce, loss_norm_rec, loss_F0_rec, loss_lm, loss_gen_all, loss_sty, loss_diff, d_loss_slm, loss_gen_lm))
+                    %(epoch, epochs, i+1, batch_manager.get_step_count(), running_loss / log_interval, d_loss, loss_dur, loss_ce, loss_norm_rec, loss_F0_rec, loss_lm, loss_gen_all, loss_sty, loss_diff, d_loss_slm, loss_gen_lm))
                 
                 writer.add_scalar('train/mel_loss', running_loss / log_interval, iters)
                 writer.add_scalar('train/gen_loss', loss_gen_all, iters)
@@ -560,8 +561,13 @@ def main(config_path):
                 running_loss = 0
                 
                 print('Time elasped:', time.time()-start_time)
-                
+            #optimizer.scheduler()
+            return running_loss, iters
+
+        batch_manager.epoch_loop(epoch, train_batch)
+        
         loss_test = 0
+        max_len = 1620
         loss_align = 0
         loss_f = 0
         _ = [model[key].eval() for key in model]
@@ -604,8 +610,8 @@ def main(config_path):
                         s = model.style_encoder(mel.unsqueeze(0).unsqueeze(1))
                         gs.append(s)
 
-                    s = torch.stack(ss).squeeze()
-                    gs = torch.stack(gs).squeeze()
+                    s = torch.stack(ss).squeeze(1)
+                    gs = torch.stack(gs).squeeze(1)
                     s_trg = torch.cat([s, gs], dim=-1).detach()
 
                     bert_dur = model.bert(texts, attention_mask=(~text_mask).int())
@@ -659,7 +665,7 @@ def main(config_path):
                     s = model.style_encoder(gt.unsqueeze(1))
 
                     y_rec = model.decoder(en, F0_fake, N_fake, s)
-                    loss_mel = stft_loss(y_rec.squeeze(), wav.detach())
+                    loss_mel = stft_loss(y_rec.squeeze(1), wav.detach())
 
                     F0_real, _, F0 = model.pitch_extractor(gt.unsqueeze(1)) 
 
@@ -675,14 +681,14 @@ def main(config_path):
                     traceback.print_exc()
                     continue
 
-        print('Epochs:', epoch + 1)
+        print('Epochs:', epoch)
         logger.info('Validation loss: %.3f, Dur loss: %.3f, F0 loss: %.3f' % (loss_test / iters_test, loss_align / iters_test, loss_f / iters_test) + '\n\n\n')
         print('\n\n\n')
-        writer.add_scalar('eval/mel_loss', loss_test / iters_test, epoch + 1)
-        writer.add_scalar('eval/dur_loss', loss_align / iters_test, epoch + 1)
-        writer.add_scalar('eval/F0_loss', loss_f / iters_test, epoch + 1)
-        
-        if epoch < joint_epoch:
+        writer.add_scalar('eval/mel_loss', loss_test / iters_test, epoch)
+        writer.add_scalar('eval/dur_loss', loss_align / iters_test, epoch)
+        writer.add_scalar('eval/F0_loss', loss_f / iters_test, epoch)
+        #if epoch < joint_epoch:
+        if False:
             # generating reconstruction examples with GT duration
             
             with torch.no_grad():
@@ -698,7 +704,7 @@ def main(config_path):
 
                     y_rec = model.decoder(en, F0_real, real_norm, s)
 
-                    writer.add_audio('eval/y' + str(bib), y_rec.cpu().numpy().squeeze(), epoch, sample_rate=sr)
+                    writer.add_audio('eval/y' + str(bib), y_rec.cpu().numpy().squeeze(1), epoch, sample_rate=sr)
 
                     s_dur = model.predictor_encoder(gt.unsqueeze(1))
                     p_en = p[bib, :, :mel_length // 2].unsqueeze(0)
@@ -707,14 +713,14 @@ def main(config_path):
 
                     y_pred = model.decoder(en, F0_fake, N_fake, s)
 
-                    writer.add_audio('pred/y' + str(bib), y_pred.cpu().numpy().squeeze(), epoch, sample_rate=sr)
+                    writer.add_audio('pred/y' + str(bib), y_pred.cpu().numpy().squeeze(1), epoch, sample_rate=sr)
 
-                    if epoch == 0:
-                        writer.add_audio('gt/y' + str(bib), waves[bib].squeeze(), epoch, sample_rate=sr)
+                    if epoch == 1:
+                        writer.add_audio('gt/y' + str(bib), waves[bib].squeeze(1), epoch, sample_rate=sr)
 
                     if bib >= 5:
                         break
-        else:
+        elif False:
             # generating sampled speech from text directly
             with torch.no_grad():
                 # compute reference styles
@@ -746,7 +752,7 @@ def main(config_path):
                     duration = model.predictor.duration_proj(x)
 
                     duration = torch.sigmoid(duration).sum(axis=-1)
-                    pred_dur = torch.round(duration.squeeze()).clamp(min=1)
+                    pred_dur = torch.round(duration.squeeze(1)).clamp(min=1)
 
                     pred_dur[-1] += 5
 
@@ -760,13 +766,13 @@ def main(config_path):
                     en = (d.transpose(-1, -2) @ pred_aln_trg.unsqueeze(0).to(texts.device))
                     F0_pred, N_pred = model.predictor.F0Ntrain(en, s)
                     out = model.decoder((t_en[bib, :, :input_lengths[bib]].unsqueeze(0) @ pred_aln_trg.unsqueeze(0).to(texts.device)), 
-                                            F0_pred, N_pred, ref.squeeze().unsqueeze(0))
+                                            F0_pred, N_pred, ref.squeeze(1).unsqueeze(0))
 
-                    writer.add_audio('pred/y' + str(bib), out.cpu().numpy().squeeze(), epoch, sample_rate=sr)
+                    writer.add_audio('pred/y' + str(bib), out.cpu().numpy().squeeze(1), epoch, sample_rate=sr)
 
                     if bib >= 5:
                         break
-                            
+            
         if epoch % saving_epoch == 0:
             if (loss_test / iters_test) < best_loss:
                 best_loss = loss_test / iters_test

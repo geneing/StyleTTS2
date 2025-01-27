@@ -137,15 +137,19 @@ class ResBlk(nn.Module):
         return x / math.sqrt(2)  # unit variance
 
 class StyleEncoder(nn.Module):
-    def __init__(self, dim_in=48, style_dim=48, max_conv_dim=384):
+    def __init__(self, dim_in=48, style_dim=48, max_conv_dim=384,
+                 skip_downsamples = False):
         super().__init__()
         blocks = []
         blocks += [spectral_norm(nn.Conv2d(1, dim_in, 3, 1, 1))]
 
         repeat_num = 4
-        for _ in range(repeat_num):
+        for i in range(repeat_num):
             dim_out = min(dim_in*2, max_conv_dim)
-            blocks += [ResBlk(dim_in, dim_out, downsample='half')]
+            down = 'half'
+            if i == repeat_num - 1 and skip_downsamples:
+                down = 'none'
+            blocks += [ResBlk(dim_in, dim_out, downsample=down)]
             dim_in = dim_out
 
         blocks += [nn.LeakyReLU(0.2)]
@@ -612,7 +616,7 @@ def load_ASR_models(ASR_MODEL_PATH, ASR_MODEL_CONFIG):
     return asr_model
 
 def build_model(args, text_aligner, pitch_extractor, bert):
-    assert args.decoder.type in ['istftnet', 'hifigan'], 'Decoder type unknown'
+    assert args.decoder.type in ['istftnet', 'hifigan', 'ringformer', 'vocos'], 'Decoder type unknown'
     
     if args.decoder.type == "istftnet":
         from Modules.istftnet import Decoder
@@ -622,7 +626,23 @@ def build_model(args, text_aligner, pitch_extractor, bert):
                 upsample_initial_channel=args.decoder.upsample_initial_channel,
                 resblock_dilation_sizes=args.decoder.resblock_dilation_sizes,
                 upsample_kernel_sizes=args.decoder.upsample_kernel_sizes, 
-                gen_istft_n_fft=args.decoder.gen_istft_n_fft, gen_istft_hop_size=args.decoder.gen_istft_hop_size) 
+                gen_istft_n_fft=args.decoder.gen_istft_n_fft, gen_istft_hop_size=args.decoder.gen_istft_hop_size)
+    elif args.decoder.type == "ringformer":
+        from Modules.ringformer import Decoder
+        decoder = Decoder(dim_in=args.hidden_dim, style_dim=args.style_dim, dim_out=args.n_mels,
+                resblock_kernel_sizes = args.decoder.resblock_kernel_sizes,
+                upsample_rates = args.decoder.upsample_rates,
+                upsample_initial_channel=args.decoder.upsample_initial_channel,
+                resblock_dilation_sizes=args.decoder.resblock_dilation_sizes,
+                upsample_kernel_sizes=args.decoder.upsample_kernel_sizes, 
+                gen_istft_n_fft=args.decoder.gen_istft_n_fft, gen_istft_hop_size=args.decoder.gen_istft_hop_size)
+    elif args.decoder.type == "vocos":
+        from Modules.vocos import Decoder
+        decoder = Decoder(dim_in=args.hidden_dim, style_dim=args.style_dim, dim_out=args.n_mels,
+                intermediate_dim=args.decoder.intermediate_dim,
+                num_layers=args.decoder.num_layers,
+                gen_istft_n_fft=args.decoder.gen_istft_n_fft,
+                gen_istft_hop_size=args.decoder.gen_istft_hop_size)
     else:
         from Modules.hifigan import Decoder
         decoder = Decoder(dim_in=args.hidden_dim, style_dim=args.style_dim, dim_out=args.n_mels,
@@ -635,9 +655,9 @@ def build_model(args, text_aligner, pitch_extractor, bert):
     text_encoder = TextEncoder(channels=args.hidden_dim, kernel_size=5, depth=args.n_layer, n_symbols=args.n_token)
     
     predictor = ProsodyPredictor(style_dim=args.style_dim, d_hid=args.hidden_dim, nlayers=args.n_layer, max_dur=args.max_dur, dropout=args.dropout)
-    
-    style_encoder = StyleEncoder(dim_in=args.dim_in, style_dim=args.style_dim, max_conv_dim=args.hidden_dim) # acoustic style encoder
-    predictor_encoder = StyleEncoder(dim_in=args.dim_in, style_dim=args.style_dim, max_conv_dim=args.hidden_dim) # prosodic style encoder
+
+    style_encoder = StyleEncoder(dim_in=args.dim_in, style_dim=args.style_dim, max_conv_dim=args.hidden_dim, skip_downsamples=args.skip_downsamples) # acoustic style encoder
+    predictor_encoder = StyleEncoder(dim_in=args.dim_in, style_dim=args.style_dim, max_conv_dim=args.hidden_dim, skip_downsamples=args.skip_downsamples) # prosodic style encoder
         
     # define diffusion model
     if args.multispeaker:
@@ -698,10 +718,18 @@ def load_checkpoint(model, optimizer, path, load_only_params=True, ignore_module
     params = state['net']
     for key in model:
         if key in params and key not in ignore_modules:
+            try:
+                model[key].load_state_dict(params[key], strict=True)
+            except:
+                from collections import OrderedDict
+                state_dict = params[key]
+                new_state_dict = OrderedDict()
+                print(f'{key} key length: {len(model[key].state_dict().keys())}, state_dict key length: {len(state_dict.keys())}')
+                for (k_m, v_m), (k_c, v_c) in zip(model[key].state_dict().items(), state_dict.items()):
+                    new_state_dict[k_m] = v_c
+                model[key].load_state_dict(new_state_dict, strict=True)
             print('%s loaded' % key)
-            model[key].load_state_dict(params[key], strict=False)
-    _ = [model[key].eval() for key in model]
-    
+                
     if not load_only_params:
         epoch = state["epoch"]
         iters = state["iters"]
