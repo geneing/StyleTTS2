@@ -120,7 +120,8 @@ def main(config_path, probe_batch):
                                       num_workers=0,
                                       device=device,
                                       dataset_config={})
-
+    def log_print_function(s):
+        log_print(s, logger)
     batch_manager = BatchManager(train_path,
                                  log_dir,
                                  probe_batch=probe_batch,
@@ -129,9 +130,8 @@ def main(config_path, probe_batch):
                                  min_length=min_length,
                                  device=device,
                                  accelerator=accelerator,
-                                 log_print=lambda s: log_print(s, logger))
+                                 log_print=log_print_function)
 
-    memory_probe()
     with accelerator.main_process_first():
         # load pretrained ASR model
         ASR_config = config.get('ASR_config', False)
