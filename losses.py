@@ -187,7 +187,7 @@ class DiscriminatorLoss(torch.nn.Module):
 
         d_loss = loss_disc_s + loss_disc_f + loss_rel
         
-        return d_loss.mean()
+        return d_loss
    
     
 class WavLMLoss(torch.nn.Module):

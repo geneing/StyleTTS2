@@ -5,11 +5,12 @@ log_interval: 10
 device: "cuda"
 epochs_1st: 200 # number of epochs for first stage training (pre-training)
 epochs_2nd: 100 # number of peochs for second stage training (joint training)
-batch_size: 16
+batch_size: 4
 max_len: 400 # maximum number of frames
-pretrained_model: ""
+split_len: 100 # split into chunks of this size
+pretrained_model: "Models/LJSpeech_original/epoch_2nd_00100.pth"
 second_stage_load_pretrained: true # set to true if the pre-trained model is for 2nd stage
-load_only_params: false # set to true if do not want to load epoch numbers and optimizer parameters
+load_only_params: true # set to true if do not want to load epoch numbers and optimizer parameters
 
 F0_path: "Utils/JDC/bst.t7"
 ASR_config: "Utils/ASR/config.yml"
@@ -17,10 +18,14 @@ ASR_path: "Utils/ASR/epoch_00080.pth"
 PLBERT_dir: 'Utils/PLBERT/'
 
 data_params:
-  train_data: "Data/train_list.txt"
-  val_data: "Data/val_list.txt"
-  root_path: "/local/LJSpeech-1.1/wavs"
-  OOD_data: "Data/OOD_texts.txt"
+  train_data: "Data/train_list_LibriTTSR_espeak.txt.verysmall.txt"
+  val_data: "Data/val_list_LibriTTSR_espeak.txt.verysmall.txt"
+  root_path: "/rhome/eingerman/Projects/DeepLearning/TTS/" #"/export/eingerman/audio/"
+  OOD_data: "Data/OOD_texts_LibriTTSR_espeak.txt.verysmall.txt"
+  # train_data: "Data/train_list.txt"
+  # val_data: "Data/val_list.txt"
+  # root_path: "/local/LJSpeech-1.1/wavs"
+  # OOD_data: "Data/OOD_texts.txt"
   min_length: 50 # sample until texts with this size are obtained for OOD texts
 
 preprocess_params:
