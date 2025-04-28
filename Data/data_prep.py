@@ -34,6 +34,8 @@ def espeak_phonemes(text):
 
 outdir = "/export/eingerman/audio/LibriTTSR/"
 indir = "/export/eingerman/audio/"
+outdir = "/rhome/eingerman/Projects/DeepLearning/TTS/LibriTTSR"
+indir = "/rhome/eingerman/Projects/DeepLearning/TTS"
 
 
 def process_files(prefix, bad_set, soxfile):
@@ -65,8 +67,8 @@ def process_files(prefix, bad_set, soxfile):
                 gruut_phonetic = gruut_phonemes(text)
                 espeak_phonetic = espeak_phonemes(text)
                 print(f"{nrow}\t{wav_file_name}:{gruut_phonetic}:{espeak_phonetic}:{speaker_id}\n")
-                fout_gruut.write(f"{wav_file_name}¦{gruut_phonetic}¦{speaker_id}\n")
-                fout_espeak.write(f"{wav_file_name}¦{espeak_phonetic}¦{speaker_id}\n")
+                fout_gruut.write(f"{wav_file_name}¦{gruut_phonetic}¦{speaker_id}¦{text}\n")
+                fout_espeak.write(f"{wav_file_name}¦{espeak_phonetic}¦{speaker_id}¦{text}\n")
             
                 soxfile.write(f"sox {wav_file_name} -r 16000 -b 16 -c 1 {wav_file_name.replace('train-clean-460','train-clean-460_16K')}\n")
                 fout_gruut.flush()
